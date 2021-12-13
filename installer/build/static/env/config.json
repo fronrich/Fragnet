@@ -9,5 +9,6 @@
   "address": null,
   "creationDate": null,
   "maxTransactions": 1000,
+  "maxClients": 10,
   "schemaDir": "../../dynamic/packages/schemas/"
 }

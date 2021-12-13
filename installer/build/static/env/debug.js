@@ -5,8 +5,8 @@ import { exec } from "../../../utils/dirUtils.js";
 const debug = () => {
   const args = process.argv.slice(2);
   const queueDir = args[0];
-  const load = 100;
-  const timeout = 3;
+  const load = 1000;
+  const timeout = 1;
 
   for (let time = 0; time < timeout; time++) {
     const files = load;

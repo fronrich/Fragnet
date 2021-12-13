@@ -34,6 +34,7 @@ const {
   address,
   creationDate,
   maxTransactions,
+  maxClients,
   schemaDir,
 } = config;
 
@@ -44,17 +45,24 @@ const vm = async (port, queueDir) => {
 
   // load monitoring
   // create a new progress bar instance and use shades_classic theme
-  const loadingBar = new cliProgress.SingleBar(
+  const usage = new cliProgress.MultiBar(
     {
-      forceRedraw: "true",
-      fps: 10,
+      forceRedraw: "false",
+      fps: 30,
+      format: "{name} {bar} {value}/{total}",
     },
     cliProgress.Presets.shades_classic
   );
 
   // start loading
   let maxTrans = maxTransactions;
-  loadingBar.start(maxTrans, 0);
+  const loadingBar = usage.create(maxTrans, 0, { name: "Threads" });
+  const clients = usage.create(maxClients, 0, { name: "Clients" });
+
+  loadingBar.update(0, {
+    format: "progress {bar} {percentage}% | ETA: {eta}s | {value}/{total}",
+  });
+
   console.clear();
 
   // debug code
@@ -74,22 +82,43 @@ const vm = async (port, queueDir) => {
 
   const app = express();
   let threads = [];
-
-  if (!liteMode) {
-    app.use(cors(corsOptions));
-    app.get("/", (req, res) => {
-      res.json({ threads: threads });
-    });
-  }
-
   const log = console.log.bind(console);
   // app.set("trust proxy", true);
 
   // set up server
   const server = createServer(app);
 
-  // setting up socket for live data connection
-  const io = new Server(server);
+  if (!liteMode) {
+    // app.use(cors(corsOptions));
+    app.get("/", (req, res) => {
+      res.json({ threads: threads });
+    });
+
+    const io = new Server(server, {
+      cors: corsOptions(whitelist),
+    });
+    io.on("connection", (socket) => {
+      clients.increment(1);
+
+      // SOCKET COMMANDS
+      // this is here for debugging purposes
+      socket.on("debug", () => {
+        socket.emit("debug-log", { status: "running in background" });
+        createThread(`node debug.js "${queueDir}"`, (error, stdout, stderr) => {
+          if (error) throw error;
+          stdout && socket.emit("debug-log", { status: "complete" });
+        });
+      });
+
+      socket.on("request-config", () => {
+        socket.emit("return-config", config);
+      });
+
+      socket.on("disconnect", () => {
+        clients.increment(-1);
+      });
+    });
+  }
 
   server.listen(port, () => {
     // log time
@@ -111,6 +140,7 @@ const vm = async (port, queueDir) => {
 
   // process kill signals
   process.on("SIGINT", () => {
+    usage.stop();
     console.clear();
     log("Running Threads have finished execution.");
     log("Shutting Down Fragnet...");
@@ -120,6 +150,7 @@ const vm = async (port, queueDir) => {
     importWatcher.close();
     log("Deleting app Instance...");
     server.close();
+    io.close();
     log("Goodbye :)");
     process.exit();
   });
