@@ -1,0 +1,29 @@
+{
+  "name": "fragnet",
+  "version": "1.0.0",
+  "description": "decentralized file storage technology",
+  "main": "init.js",
+  "author": "Fronrich Puno",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "body-parser": "^1.19.1",
+    "chokidar": "^3.5.2",
+    "cli-progress": "^3.9.1",
+    "cors": "^2.8.5",
+    "deepcopy": "^2.1.0",
+    "express": "^4.17.1",
+    "jsonschema": "^1.4.0",
+    "morgan": "^1.10.0",
+    "node": "^17.1.0",
+    "node-csv-parse": "^1.2.0",
+    "nodemon": "^2.0.15",
+    "opn": "^6.0.0",
+    "simple-ssh": "^1.0.0",
+    "socket.io": "^4.4.0"
+  }
+}

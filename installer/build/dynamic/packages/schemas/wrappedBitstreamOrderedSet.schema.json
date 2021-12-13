@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "description": "an ordered set of fragments used for the dispersal and gathering of fragments",
+  "title": "WrappedBitstreamOrderedSet",
+  "type": "object",
+  "properties": {
+    "primativeType": {
+      "type": "string",
+      "pattern": "Package"
+    },
+    "subType": {
+      "type": "string",
+      "pattern": "WrappedBitstreamOrderedSet"
+    },
+    "struct": {
+      "type": "array",
+      "items": {
+        "ref": "/WRAPPED_BITSTREAM"
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "/DNS_MAPPING",
+  "title": "DNSMapping",
+  "type": "object",
+  "properties": {
+    "nodeType": {
+      "description": "The type of node this is. Corresponds to numerical identification in nodeUtils",
+      "type": "number",
+      "enum": [0, 1, 2, 3, 4]
+    },
+    "ip": {
+      "description": "the ip of a node",
+      "type": "string",
+      "pattern": "[0-9]{3}\\.[0-9]{3}\\.[0-9]{3}\\.[0-9]{3}"
+    },
+    "fdcl": {
+      "description": "the human readable location. fdcl stands for 'fragnet debris cluster location'",
+      "type": "string",
+      "pattern": "fdcl\\:/(/[\\a-z\\-.]+)+"
+    }
+  }
+}

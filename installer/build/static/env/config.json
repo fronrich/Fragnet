@@ -1,0 +1,13 @@
+{
+  "rootPort": 8000,
+  "whitelist": ["http://localhost:3000", "http://localhost:8000"],
+  "nodeDir": "./nodes/GenericNode/",
+  "guiDir": "../frontend/public/",
+  "queueDir": "./queue/",
+  "subprocessDir": "./subprocesses/",
+  "nodeType": 0,
+  "address": null,
+  "creationDate": null,
+  "maxTransactions": 1000,
+  "schemaDir": "../../dynamic/packages/schemas/"
+}

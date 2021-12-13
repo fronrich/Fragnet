@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "/WRAPPED_BITSTREAM",
+  "title": "WrappedBitstream",
+  "type": "object",
+  "properties": {
+    "primativeType": {
+      "type": "string",
+      "pattern": "Package"
+    },
+    "subType": {
+      "type": "string",
+      "pattern": "WrappedBitstream"
+    },
+    "clientAddress": {
+      "description": "fdcl address of the client node this file was sent from",
+      "type": "string",
+      "pattern": "fdcl\\:/(/[A-z]+)+"
+    },
+    "size": {
+      "description": "the size of the file in bytes. used to determine fragmentation",
+      "type": "integer",
+      "minimum": 0
+    },
+    "bitstream": {
+      "description": "a bitstream of the actual file in the form of a string",
+      "type": "string"
+    }
+  }
+}

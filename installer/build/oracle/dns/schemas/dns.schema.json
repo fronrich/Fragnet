@@ -1,0 +1,10 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "/DNS",
+  "title": "DNS",
+  "description": "list of all fragnet address to ip mappings",
+  "type": "array",
+  "items": {
+    "$ref": "/DNS_MAPPING"
+  }
+}

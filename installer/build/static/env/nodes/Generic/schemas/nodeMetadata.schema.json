@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "properties": {
+    "props": { "$ref": "/NODE_PROPS" },
+    "state": {
+      "description": "mutable, short-term infromation read and updated by carriers traveling across nodes",
+      "properties": {
+        "status": {
+          "description": "determines if the node is active, inactive, in audit, or slashed",
+          "type": "string",
+          "enum": ["active, inactive, audit, slashed"]
+        },
+        "packages": {
+          "description": "a list of the current ids of packages being processed. Package ids are hexidecimals",
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "pattern": "0x[0-9]+"
+          }
+        }
+      }
+    }
+  }
+}

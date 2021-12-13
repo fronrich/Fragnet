@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "$id": "/NODE_PROPS",
+  "properties": {
+    "nodeType": {
+      "description": "The type of node this is. Corresponds to numerical identification in nodeUtils",
+      "type": "number",
+      "enum": [0, 1, 2, 3, 4]
+    },
+    "address": {
+      "description": "the dns address",
+      "type": "string"
+    },
+    "creationDate": {
+      "description": "the date the node was created",
+      "type": "string"
+    },
+    "maxTransactions": {
+      "description": "The maximum amount of transactions, or processes, this node is allowed to perform synchronously",
+      "type": "number",
+      "minimum": 1
+    }
+  }
+}
