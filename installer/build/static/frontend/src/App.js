@@ -7,6 +7,7 @@ import { ReactComponent as Logo } from "./media/logo.svg";
 import React from "react";
 import Appshortcut from "./components/AppShortcut";
 import KernelContextAPI from "./apis/KernelContextAPI";
+import Clock from "./components/Clock";
 
 const App = () => {
   return (
@@ -16,15 +17,16 @@ const App = () => {
       </Layer>
       <Layer>
         <BrowserRouter>
-          {/* <Layer justify="flex-end">
+          <Layer justify="flex-start">
             <Taskbar>
-              <Appshortcut
+              <Clock />
+              {/* <Appshortcut
                 appName="terminal"
                 iconName={"FcSelfServiceKiosk"}
                 link="/"
-              />
+              /> */}
             </Taskbar>
-          </Layer> */}
+          </Layer>
           <Routes>
             <Route path="/" element={<Home />} />
           </Routes>

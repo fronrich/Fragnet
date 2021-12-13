@@ -150,7 +150,7 @@ const vm = async (port, queueDir) => {
     importWatcher.close();
     log("Deleting app Instance...");
     server.close();
-    io.close();
+    socket.off();
     log("Goodbye :)");
     process.exit();
   });

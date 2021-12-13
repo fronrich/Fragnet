@@ -48,7 +48,9 @@ const KernelContextAPI = ({ children }) => {
   useEffect(() => {
     socket.on("test", (message) => console.log(message));
     makeRequest("request-config", () => {
-      getReturn(reqRetPairs["request-config"], (data) => console.log(data));
+      getReturn(reqRetPairs["request-config"], (data) =>
+        console.log("Booting with config", data)
+      );
     });
 
     // sync state

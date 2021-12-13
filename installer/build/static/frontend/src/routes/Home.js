@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import styled from "styled-components";
 import { PageLayout } from "./Layout";
 import Window from "../components/Window";
-import { makeRequest, getReturn, reqRetPairs } from "../apis/KernelContextAPI";
+import { socket, reqRetPairs } from "../apis/KernelContextAPI";
 
 const Contents = styled.div`
   display: flex;
@@ -37,17 +37,21 @@ const Home = () => {
     const [value, setValue] = useState("");
     const [res, setRes] = useState("");
     useEffect(() => {
-      const ret = async () => {
-        getReturn(reqRetPairs[value], (data) => {
-          console.log(data);
-          setRes(JSON.stringify(data), null, "\t");
-        });
+      socket.on("return-config", (data) => {
+        console.log(data);
+        setRes(JSON.stringify(data), null, "\t");
+      });
+      socket.on("debug-log", (data) => {
+        console.log(data);
+        setRes(JSON.stringify(data), null, "\t");
+      });
+
+      return () => {
+        socket.off();
       };
-      return ret();
     });
     const handleKeyPress = (e) => {
       if (e.key === "Enter") {
-        makeRequest(value);
         setCache([
           ...cache,
           <Row key={cache.length}>
@@ -56,9 +60,9 @@ const Home = () => {
           </Row>,
           <Row key={cache.length + 1}>
             <span>{res}</span>
-            <br />
           </Row>,
         ]);
+        socket.emit(value, () => {});
         // talk to server to access shell
       } else {
         setValue(value + e.key);
