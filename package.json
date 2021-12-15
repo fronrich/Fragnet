@@ -23,6 +23,7 @@
     "node-csv-parse": "^1.2.0",
     "nodemon": "^2.0.15",
     "opn": "^6.0.0",
+    "pm2": "^5.1.2",
     "simple-ssh": "^1.0.0",
     "socket.io": "^4.4.0"
   }

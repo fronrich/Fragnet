@@ -13,9 +13,16 @@ const Clock = () => {
     );
   };
   useEffect(() => {
-    setInterval(getTime, 1000);
+    const ticker = setInterval(getTime, 1000);
+    return () => {
+      clearInterval(ticker);
+    };
   }, []);
-  return <span>{time}</span>;
+  return (
+    <div>
+      <span>{time}</span>
+    </div>
+  );
 };
 
 export default Clock;

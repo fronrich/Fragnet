@@ -1,20 +1,7 @@
 import React, { useState, useEffect } from "react";
 import socketIOClient from "socket.io-client";
-import cors from "cors";
 
 const APILink = "http://localhost:8000";
-const whitelist = ["http://localhost:3000", "http://localhost:8000"];
-
-const corsOptions = {
-  origin: (origin, callback) => {
-    if (!origin || whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-};
 
 export const socket = socketIOClient(APILink, {
   withCredentials: true,
@@ -38,40 +25,70 @@ export const reqRetPairs = {
   "request-config": "return-config",
 };
 
+// state machine context
+export const StateMachine = React.createContext();
+
 // getReturn("return-config", (data) => console.log(data))
 const KernelContextAPI = ({ children }) => {
   // create context wrapper and set its endpoint to the socket
-  const Context = React.createContext();
-  const [endpoint, setEndpoint] = useState(APILink);
-  const [testSocket, setTestSocket] = useState("hello");
+  const [state, setState] = useState({});
+  const [users, setUsers] = useState(0);
+  const [threads, setThreads] = useState(0);
+  const [prevThreads, setPrevThreads] = useState(0);
+  const [traffic, setTraffic] = useState("");
+  const fetchMetrics = () => {
+    socket.on("user-count", (data) => {
+      setUsers(data);
+    });
+    socket.on("active-threads", (data) => {
+      setThreads(data.activeThreads);
+      setPrevThreads(data.activeThreads);
+      setTraffic(data.threads);
+    });
+  };
 
   useEffect(() => {
-    socket.on("test", (message) => console.log(message));
-    makeRequest("request-config", () => {
-      getReturn(reqRetPairs["request-config"], (data) =>
-        console.log("Booting with config", data)
-      );
-    });
+    // compensate for concurrency issues
+    const balanceThreads = () => {
+      if (threads !== 0 && threads === prevThreads) {
+        setThreads(0);
+        setPrevThreads(0);
+      }
+    };
+    const setStateToConfig = () => {
+      socket.emit("request-config", () => {});
+      socket.on("return-config", (data) => {
+        setState(data);
+      });
+    };
+    if (Object.keys(state).length === 0) {
+      setStateToConfig();
+    }
+    const fetchInt = setInterval(fetchMetrics, 100);
+    const balanceInt = setInterval(balanceThreads, 1000);
+    return () => {
+      clearInterval(balanceInt);
+      clearInterval(fetchInt);
+      socket.off();
+    };
+  }, [threads, prevThreads, state]);
 
-    // sync state
-    // fetch(APILink)
-    //   .catch((error) => {
-    //     console.log("link to kernel lost");
-    //     throw error;
-    //   })
-    //   .then((response) => {
-    //     if (response.ok) {
-    //       return response.json();
-    //     } else {
-    //       throw new Error();
-    //     }
-    //   })
-    //   .then((data) => {
-    //     console.log(data);
-    //   });
-  }, []);
-
-  return <Context.Provider value={"hello"}>{children}</Context.Provider>;
+  return Object.keys(state).length === 0 ? (
+    <div>
+      <span>booting kernel...</span>
+    </div>
+  ) : (
+    <StateMachine.Provider
+      value={{
+        ...state,
+        userCount: users,
+        activeThreads: threads,
+        transactionStream: traffic,
+      }}
+    >
+      {children}
+    </StateMachine.Provider>
+  );
 };
 
 export default KernelContextAPI;

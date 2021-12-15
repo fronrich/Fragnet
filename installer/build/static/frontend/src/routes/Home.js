@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { PageLayout } from "./Layout";
 import Window from "../components/Window";
-import { socket, reqRetPairs } from "../apis/KernelContextAPI";
+import { socket } from "../apis/KernelContextAPI";
 
 const Contents = styled.div`
   display: flex;
@@ -31,22 +30,30 @@ const Row = styled.div`
 `;
 
 // home is a terminal used to run shell commands via express
-const Home = () => {
-  const [cache, setCache] = useState([]);
+const Home = ({ onClose, ram, writeRam }) => {
+  const [cache, setCache] = useState(ram.terminal || []);
   const KeyPressElement = () => {
     const [value, setValue] = useState("");
-    const [res, setRes] = useState("");
-    useEffect(() => {
+
+    const updateRes = () => {
       socket.on("return-config", (data) => {
+        data = JSON.stringify(data);
         console.log(data);
-        setRes(JSON.stringify(data), null, "\t");
+        setCache([
+          ...cache,
+          <Row key={cache.length + 1 + "_res"}>
+            <span>{data}</span>
+          </Row>,
+        ]);
       });
       socket.on("debug-log", (data) => {
         console.log(data);
-        setRes(JSON.stringify(data), null, "\t");
       });
-
+    };
+    useEffect(() => {
+      const cmdRet = setInterval(updateRes(), 100);
       return () => {
+        clearInterval(cmdRet);
         socket.off();
       };
     });
@@ -54,15 +61,18 @@ const Home = () => {
       if (e.key === "Enter") {
         setCache([
           ...cache,
-          <Row key={cache.length}>
+          <Row key={cache.length + "_req"}>
             <span>client:~$&nbsp;</span>
             <span>{value}</span>
           </Row>,
-          <Row key={cache.length + 1}>
-            <span>{res}</span>
-          </Row>,
         ]);
-        socket.emit(value, () => {});
+
+        writeRam("terminal", cache);
+        console.log("ram", ram);
+        console.log(value);
+        socket.emit(value);
+        console.log("socket emit");
+        updateRes(socket);
         // talk to server to access shell
       } else {
         setValue(value + e.key);
@@ -77,8 +87,9 @@ const Home = () => {
   };
   // color="#51ff9a"
   // color="#ffa2f3"
+
   return (
-    <Window color="#51ff9a" windowName="Terminal">
+    <Window color="#5c6caf" windowName="Terminal" onClose={onClose}>
       <Contents>
         {cache}
         <KeyPressElement />

@@ -1,41 +1,49 @@
 import React from "react";
 import styled from "styled-components";
 import Interactable from "../primitives/Interactable";
+import Clock from "./Clock";
 
-const Bar = styled(Interactable)`
-  color: #0e0e14;
-  font-family: "Ubuntu Mono", monospace;
+const AppTray = styled.div`
   display: flex;
-  justify-content: center;
+`;
+
+// const color = '#0e0e14';
+const color = "#fff";
+const Bar = styled(Interactable)`
+  color: ${color};
+  font-family: 'Comfortaa', cursive;
+  display: flex;
+  justify-content: space-between;
   align-items: center;
   width: 100%;
-  height: 20px;
-  background-color: rgb(0,255,162);
-  background-image: linear-gradient(0deg, #000000 0%, rgba(255,255,255,0.25) 100%);
-  background-blend-mode: soft-light;
-  transition: 200ms;
-  transition-delay: 500ms;
-  transform: translateY(-75%);
-  opacity: 0.1;
+  height: 30px;
+  margin-bottom: 10px;
+  background-color: #1d2238;
+  /* background-image: linear-gradient(0deg, #0000002b 0%, #6b6b6b14 100%);
+  background-blend-mode: soft-light; */
 
-  & {
-    transition: 200ms;
-    transition-delay: 500ms;
-    opacity: 0;
+  box-shadow: 0 2px 2px 2px #141414;
+  overflow: hidden;
+
+  & svg {
+    fill: ${color};
+    stroke: ${color};
+
   }
 
-  &:hover {
-    transform: translateY(0);
-    opacity: 1;
-    & span{
-    opacity: 1;
-    }
-  );
+  & div {
+    margin: 10px;
+  }
   }
 `;
 
 const Taskbar = ({ children }) => {
-  return <Bar>{children}</Bar>;
+  return (
+    <Bar>
+      <AppTray>{children}</AppTray>
+      <Clock />
+    </Bar>
+  );
 };
 
 export default Taskbar;

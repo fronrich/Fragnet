@@ -39,6 +39,9 @@ const {
 } = config;
 
 const vm = async (port, queueDir) => {
+  // log time since program execution
+  const execTime = currentDateTime();
+
   // read variables from terminal
   const mode = init();
   const liteMode = mode === "lite";
@@ -56,13 +59,9 @@ const vm = async (port, queueDir) => {
 
   // start loading
   let maxTrans = maxTransactions;
-  const loadingBar = usage.create(maxTrans, 0, { name: "Threads" });
-  const clients = usage.create(maxClients, 0, { name: "Clients" });
-
-  loadingBar.update(0, {
-    format: "progress {bar} {percentage}% | ETA: {eta}s | {value}/{total}",
-  });
-
+  let loadingBar, clients;
+  loadingBar = usage.create(maxTrans, 0, { name: "Threads" });
+  clients = usage.create(maxClients, 0, { name: "Clients" });
   console.clear();
 
   // debug code
@@ -88,25 +87,36 @@ const vm = async (port, queueDir) => {
   // set up server
   const server = createServer(app);
 
+  let io;
+
+  // Something to use when events are received.
+  // Add event listeners.
+  let activeThreads = 0;
+
   if (!liteMode) {
     // app.use(cors(corsOptions));
-    app.get("/", (req, res) => {
-      res.json({ threads: threads });
-    });
+    // app.get("/", (req, res) => {
+    //   res.json({ threads: threads });
+    // });
 
-    const io = new Server(server, {
+    // State Syncing Stuff
+    let clientCount = 0;
+
+    io = new Server(server, {
       cors: corsOptions(whitelist),
     });
     io.on("connection", (socket) => {
+      clientCount += 1;
+      socket.emit("user-count", clientCount);
       clients.increment(1);
-
       // SOCKET COMMANDS
       // this is here for debugging purposes
       socket.on("debug", () => {
         socket.emit("debug-log", { status: "running in background" });
+
         createThread(`node debug.js "${queueDir}"`, (error, stdout, stderr) => {
           if (error) throw error;
-          stdout && socket.emit("debug-log", { status: "complete" });
+          stdout && socket.emit("debugS-log", { status: "complete" });
         });
       });
 
@@ -115,25 +125,68 @@ const vm = async (port, queueDir) => {
       });
 
       socket.on("disconnect", () => {
+        clientCount -= 1;
+        socket.emit("user-count", clientCount);
         clients.increment(-1);
       });
     });
   }
 
   server.listen(port, () => {
-    // log time
-    const execTime = currentDateTime();
-
     // display the header
     header(execTime, config, log, server, liteMode);
     // const threads = [];
 
-    // Something to use when events are received.
-    // Add event listeners.
     importWatcher
-      .on("add", (path) =>
-        onAddServer(path, threads, execTime, loadingBar, queueDir)
-      )
+      .on("add", (path) => {
+        const genID = () => {
+          const id =
+            "0x" +
+            parseInt(Math.random() * (1 << 30).toString(10)).toString(16);
+          if (threads.includes(id)) {
+            id = genID();
+          }
+          return id;
+        };
+        const id = genID();
+        // add load
+        activeThreads += 1;
+        loadingBar.increment(1);
+        const alertDebug = setInterval(
+          () =>
+            io.emit("active-threads", {
+              activeThreads: activeThreads,
+              threads: id,
+            }),
+          100
+        );
+
+        // log file
+        const logEntry = `${path} | ${currentDateTime()}`;
+        exec(`echo "${logEntry}" >> ${queueDir}.session-${execTime}.log`);
+        threads.push(id);
+
+        // Create a thread using exec from child process
+        // log(`Processing File on thread ${id}`);
+        createThread(
+          `node thread.js "${id}" "${path}"`,
+          (error, stdout, stderr) => {
+            if (error) {
+              throw error;
+            }
+            activeThreads -= 1;
+            loadingBar.increment(-1);
+            clearInterval(alertDebug);
+          }
+        );
+
+        // delete from thread list
+        for (var i = 0; i < threads.length; i++) {
+          if (threads[i] === id) {
+            threads.splice(i--, 1);
+          }
+        }
+      })
       .on("change", (path) => {})
       .on("unlink", (path) => {});
   });
@@ -149,8 +202,11 @@ const vm = async (port, queueDir) => {
     // TODO: terminate subprocesses using SSH connections
     importWatcher.close();
     log("Deleting app Instance...");
+
+    // alert frontend that connection has been closed
+    io.emit("close");
     server.close();
-    socket.off();
+    // io.off();
     log("Goodbye :)");
     process.exit();
   });

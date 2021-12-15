@@ -75,7 +75,15 @@ export const header = (execTime, config, log, server, liteMode) => {
   log();
 };
 // what to do when you add a file
-export const onAddServer = (path, threads, execTime, loadingBar, queueDir) => {
+export const onAddServer = (
+  path,
+  threads,
+  execTime,
+  loadingBar,
+  queueDir,
+  liteMode,
+  threadCount
+) => {
   // add load
   loadingBar.increment(1);
 
