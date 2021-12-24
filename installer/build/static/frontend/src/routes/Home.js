@@ -36,18 +36,23 @@ const Home = ({ onClose, ram, writeRam }) => {
     const [value, setValue] = useState("");
 
     const updateRes = () => {
-      socket.on("return-config", (data) => {
+      const addEntry = (data) => {
         data = JSON.stringify(data);
-        console.log(data);
         setCache([
           ...cache,
           <Row key={cache.length + 1 + "_res"}>
             <span>{data}</span>
           </Row>,
         ]);
+      };
+      socket.on("return-config", (data) => {
+        addEntry(data);
       });
       socket.on("debug-log", (data) => {
-        console.log(data);
+        addEntry(data);
+      });
+      socket.on("return-shell", (data) => {
+        addEntry(data);
       });
     };
     useEffect(() => {
@@ -59,6 +64,7 @@ const Home = ({ onClose, ram, writeRam }) => {
     });
     const handleKeyPress = (e) => {
       if (e.key === "Enter") {
+        // save request
         setCache([
           ...cache,
           <Row key={cache.length + "_req"}>
@@ -66,22 +72,32 @@ const Home = ({ onClose, ram, writeRam }) => {
             <span>{value}</span>
           </Row>,
         ]);
+        const args = value.split(" ");
+        const cmd = args[0];
+        const shellCmd = args[1] || "";
+        // take care of clear
+        cmd === "clear" && setCache([]);
 
         writeRam("terminal", cache);
-        console.log("ram", ram);
-        console.log(value);
-        socket.emit(value);
-        console.log("socket emit");
-        updateRes(socket);
+
+        // send request
         // talk to server to access shell
-      } else {
-        setValue(value + e.key);
+        socket.emit(cmd, shellCmd);
+
+        // receive request
+        updateRes();
       }
     };
     return (
       <Row>
         <span>client:~$&nbsp;</span>
-        <StyledInput type="text" onKeyPress={(e) => handleKeyPress(e)} />
+        <StyledInput
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyPress={(e) => handleKeyPress(e)}
+          autoFocus
+        />
       </Row>
     );
   };

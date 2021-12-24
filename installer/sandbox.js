@@ -1,21 +1,32 @@
 "use strict";
 
-import { validateSchema, importSchema, importJSON } from "./apis/dataAPIs.js";
+import {
+  chaChaDecrypt,
+  chaChaDecryptJimp,
+  chaChaDelete,
+  chaChaEncrypt,
+  drawBuffer,
+} from "./utils/cryptoUtils.js";
 
-const data = [
-  {
-    nodeType: 0,
-    ip: "108.162.221.168",
-    fdcl: "fdcl://test/tesSASDt*jkads",
-  },
-];
+const keypress = async () => {
+  process.stdin.setRawMode(true);
+  return new Promise((resolve) =>
+    process.stdin.once("data", () => {
+      process.stdin.setRawMode(false);
+      resolve();
+    })
+  );
+};
 
-const dnsSchema = importSchema("./build/oracle/dns/schemas/dns.schema.json");
-const dnsMappingSchema = importSchema(
-  "./build/oracle/dns/schemas/dnsMapping.schema.json"
-);
+(async () => {
+  const { key, nonce, ciphertext } = chaChaDelete("hw.txt", 256, 64, "hw.frag");
 
-const match = validateSchema(data, dnsSchema, [dnsMappingSchema]);
-console.log(match);
+  await keypress();
 
-importJSON("./dummy.data");
+  drawBuffer(key, "key.png");
+  await keypress();
+  drawBuffer(nonce, "nonce.png");
+  await keypress();
+
+  await chaChaDecryptJimp("key.png", "nonce.png", "hw.frag", "hw.txt");
+})().then(process.exit);

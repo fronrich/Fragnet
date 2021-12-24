@@ -17,7 +17,15 @@ export const validateSchema = (data, schema, subschemas = []) => {
 
 // read a file and save as bitstream
 export const readFile = (dir) => {
-  return fs.readFileSync(dir, "utf8");
+  const bits = fs.readFileSync(dir, "utf8");
+  return bits;
+};
+
+export const writeFile = (dir, bits) => {
+  fs.writeFile(dir, bits, (err) => {
+    if (err) throw err;
+    return bits;
+  });
 };
 
 // import a json since modules are not supported in node

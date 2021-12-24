@@ -69,10 +69,6 @@ export const header = (execTime, config, log, server, liteMode) => {
   // !liteMode && opn(guiLocation);
   log("Current Time", execTime);
   log("config:", config);
-  log();
-  log("VM LOAD");
-  log("------------------");
-  log();
 };
 // what to do when you add a file
 export const onAddServer = (
@@ -81,8 +77,6 @@ export const onAddServer = (
   execTime,
   loadingBar,
   queueDir,
-  liteMode,
-  threadCount
 ) => {
   // add load
   loadingBar.increment(1);

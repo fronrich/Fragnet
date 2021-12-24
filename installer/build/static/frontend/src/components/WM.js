@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
-import Home from "../routes/Home";
-import Info from "../routes/Info";
+import { Home, Info } from "../routes";
 import Taskbar from "./Taskbar";
 import { Layer } from "../routes/Layout";
 import Appshortcut from "./AppShortcut";
@@ -36,7 +35,6 @@ const WM = () => {
   const [ram, setRam] = useState({});
 
   const writeRam = (programName, data) => {
-    // TODO: Save the state of programs here
     const temp = ram;
     // attempt to update program if open
     temp[programName] = data;

@@ -12,11 +12,6 @@
       "type": "string",
       "pattern": "WrappedBitstream"
     },
-    "clientAddress": {
-      "description": "fdcl address of the client node this file was sent from",
-      "type": "string",
-      "pattern": "fdcl\\:/(/[A-z]+)+"
-    },
     "size": {
       "description": "the size of the file in bytes. used to determine fragmentation",
       "type": "integer",

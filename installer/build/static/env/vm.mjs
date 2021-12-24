@@ -5,21 +5,18 @@ import { importJSON } from "../../../apis/dataAPIs.js";
 import cliProgress from "cli-progress";
 import process from "process";
 import { exec as createThread } from "child_process";
-import opn from "opn";
-import cors from "cors";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { ioAPI } from "./io.mjs";
 
 // import utils
-import * as Utils from "./vmUtils.js";
+import * as Utils from "./vmUtils.mjs";
 
 const {
   corsOptions,
   init,
   currentDateTime,
   header,
-  onAddServer,
-  onAddContainer,
 } = Utils;
 
 // deconstruct the config
@@ -48,26 +45,32 @@ const vm = async (port, queueDir) => {
 
   // load monitoring
   // create a new progress bar instance and use shades_classic theme
-  const usage = new cliProgress.MultiBar(
-    {
-      forceRedraw: "false",
-      fps: 30,
-      format: "{name} {bar} {value}/{total}",
-    },
-    cliProgress.Presets.shades_classic
-  );
+  let usage;
+  if(liteMode) {
+
+    usage = new cliProgress.MultiBar(
+      {
+        forceRedraw: "false",
+        fps: 30,
+        format: "{name} {bar} {value}/{total}",
+      },
+      cliProgress.Presets.shades_classic
+    );
+  }
 
   // start loading
   let maxTrans = maxTransactions;
   let loadingBar, clients;
-  loadingBar = usage.create(maxTrans, 0, { name: "Threads" });
-  clients = usage.create(maxClients, 0, { name: "Clients" });
-  console.clear();
+  if (liteMode) {
+    loadingBar = usage.create(maxTrans, 0, { name: "Threads" });
+    clients = usage.create(maxClients, 0, { name: "Clients" });
+    console.clear();
+  }
 
   // debug code
   if (mode === "debug") {
     console.log("debug mode");
-    createThread(`node debug.js "${queueDir}"`, (error, stdout, stderr) => {
+    createThread(`node debug.mjs "${queueDir}"`, (error, stdout, stderr) => {
       if (error) throw error;
     });
   }
@@ -100,36 +103,13 @@ const vm = async (port, queueDir) => {
     // });
 
     // State Syncing Stuff
-    let clientCount = 0;
-
+    
     io = new Server(server, {
       cors: corsOptions(whitelist),
     });
-    io.on("connection", (socket) => {
-      clientCount += 1;
-      socket.emit("user-count", clientCount);
-      clients.increment(1);
-      // SOCKET COMMANDS
-      // this is here for debugging purposes
-      socket.on("debug", () => {
-        socket.emit("debug-log", { status: "running in background" });
 
-        createThread(`node debug.js "${queueDir}"`, (error, stdout, stderr) => {
-          if (error) throw error;
-          stdout && socket.emit("debugS-log", { status: "complete" });
-        });
-      });
-
-      socket.on("request-config", () => {
-        socket.emit("return-config", config);
-      });
-
-      socket.on("disconnect", () => {
-        clientCount -= 1;
-        socket.emit("user-count", clientCount);
-        clients.increment(-1);
-      });
-    });
+    // run socket
+    ioAPI(io)
   }
 
   server.listen(port, () => {
@@ -151,7 +131,7 @@ const vm = async (port, queueDir) => {
         const id = genID();
         // add load
         activeThreads += 1;
-        loadingBar.increment(1);
+        liteMode && loadingBar.increment(1);
         const alertDebug = setInterval(
           () =>
             io.emit("active-threads", {
@@ -169,13 +149,13 @@ const vm = async (port, queueDir) => {
         // Create a thread using exec from child process
         // log(`Processing File on thread ${id}`);
         createThread(
-          `node thread.js "${id}" "${path}"`,
+          `node thread.mjs "${id}" "${path}"`,
           (error, stdout, stderr) => {
             if (error) {
               throw error;
             }
             activeThreads -= 1;
-            loadingBar.increment(-1);
+            liteMode && loadingBar.increment(-1);
             clearInterval(alertDebug);
           }
         );
@@ -193,7 +173,7 @@ const vm = async (port, queueDir) => {
 
   // process kill signals
   process.on("SIGINT", () => {
-    usage.stop();
+    liteMode && usage.stop();
     console.clear();
     log("Running Threads have finished execution.");
     log("Shutting Down Fragnet...");

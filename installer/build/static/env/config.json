@@ -1,14 +1,15 @@
 {
   "rootPort": 8000,
   "whitelist": ["http://localhost:3000", "http://localhost:8000"],
+  "homeDir": "/home/fronrich/",
   "nodeDir": "./nodes/GenericNode/",
   "guiDir": "../frontend/public/",
   "queueDir": "./queue/",
   "subprocessDir": "./subprocesses/",
+  "schemaDir": "../../dynamic/packages/schemas/",
   "nodeType": 0,
   "address": null,
   "creationDate": null,
   "maxTransactions": 1000,
-  "maxClients": 10,
-  "schemaDir": "../../dynamic/packages/schemas/"
+  "maxClients": 10
 }

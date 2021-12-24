@@ -2,7 +2,7 @@
 import { importJSON } from "../../../apis/dataAPIs.js";
 import { removeDir } from "../../../utils/dirUtils.js";
 import process from "process";
-import Node from "./node.js";
+import Node from "./node.mjs";
 const config = importJSON("./config.json");
 const thread = () => {
   const args = process.argv.slice(2);
